@@ -1,12 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Page Title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Facial Expressions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        .face {
+            width: 400px;
+            height: 400px;
+            background-color: #ffdbac; /* Skin color */
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .eyes-container {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+        }
+
+        .eye {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border-radius: 50%;
+            position: relative;
+            border: 5px solid #000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .pupil {
+            width: 30px;
+            height: 30px;
+            background-color: #000;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* So it doesn't block cursor events */
+            transition: all 0.1s ease;
+        }
+
+        .nose {
+            width: 40px;
+            height: 60px;
+            background-color: #f1c27d; /* Nose color */
+            border-radius: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .mouth {
+            width: 200px;
+            height: 100px;
+            background-color: #9e3a3a; /* Mouth color */
+            border-radius: 0 0 100px 100px;
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+    </style>
 </head>
 <body>
+    <div class="face">
+        <div class="eyes-container">
+            <div class="eye">
+                <div class="pupil"></div>
+            </div>
+            <div class="eye">
+                <div class="pupil"></div>
+            </div>
+        </div>
+        <div class="nose"></div>
+        <div class="mouth"></div>
+    </div>
 
-<h1>This is a Heading</h1>
-<p>This is a paragraph.</p>
+    <script>
+        const eyes = document.querySelectorAll('.eye');
+        const pupils = document.querySelectorAll('.pupil');
+        const face = document.querySelector('.face');
+        const mouth = document.querySelector('.mouth');
 
+        const maxPupilDistance = 20; // Maximum distance the pupil can move within the eye
+        const joyThreshold = 150; // Distance threshold for joy
+        const fearThreshold = 300; // Distance threshold for fear (mouse further away)
+
+        document.addEventListener('mousemove', (e) => {
+            const faceRect = face.getBoundingClientRect();
+            const faceCenterX = faceRect.left + faceRect.width / 2;
+            const faceCenterY = faceRect.top + faceRect.height / 2;
+
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Calculate distance from the mouse to the center of the face
+            const deltaX = mouseX - faceCenterX;
+            const deltaY = mouseY - faceCenterY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            // Adjust the pupils based on the mouse's distance to the face
+            eyes.forEach((eye, index) => {
+                const pupil = pupils[index];
+                const eyeRect = eye.getBoundingClientRect();
+                const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+                const eyeCenterY = eyeRect.top + eyeRect.height / 2;
+
+                // Calculate the angle and distance to move the pupil
+                const angle = Math.atan2(deltaY, deltaX);
+                const moveDistance = Math.min(distance, maxPupilDistance);
+                const pupilX = moveDistance * Math.cos(angle);
+                const pupilY = moveDistance * Math.sin(angle);
+
+                pupil.style.transform = `translate(-50%, -50%) translate(${pupilX}px, ${pupilY}px)`;
+            });
+
+            // Adjust the face based on the distance from the mouse
+            if (distance < joyThreshold) {
+                // Joyful Expression (close to the face)
+                face.style.backgroundColor = "#ffdbac"; // Skin color (normal)
+                mouth.style.borderRadius = "0 0 100px 100px"; // Smile
+                mouth.style.backgroundColor = "#9e3a3a"; // Smiling mouth color
+                pupils.forEach(pupil => pupil.style.width = "40px"); // Larger pupils for joy
+                pupils.forEach(pupil => pupil.style.height = "40px");
+            } else if (distance < fearThreshold) {
+                // Neutral Expression (mid-range distance)
+                face.style.backgroundColor = "#ffdbac"; // Neutral skin tone
+                mouth.style.borderRadius = "0 0 80px 80px"; // Neutral mouth
+                mouth.style.backgroundColor = "#9e3a3a"; // Neutral mouth color
+                pupils.forEach(pupil => pupil.style.width = "30px"); // Normal pupils
+                pupils.forEach(pupil => pupil.style.height = "30px");
+            } else {
+                // Fear Expression (far from the face)
+                face.style.backgroundColor = "#f0c2a1"; // Lighter, scared face color
+                mouth.style.borderRadius = "100px 100px 0 0"; // Frown shape
+                mouth.style.backgroundColor = "#9e3a3a"; // Frowning mouth color
+                pupils.forEach(pupil => pupil.style.width = "20px"); // Smaller pupils for fear
+                pupils.forEach(pupil => pupil.style.height = "20px");
+            }
+        });
+    </script>
 </body>
 </html>
